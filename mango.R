@@ -74,7 +74,7 @@ option_list <- list(
   make_option(c("--FDR"),  default="0.05",help="FDR cutoff for interactions"),
   make_option(c("--extendreads"),  default="120",help="how many bp to extend reads towards peak"),
   make_option(c("--minPETS"),  default="2",help="minimum number of PETs required for an interaction (applied after FDR filtering)"),
-  make_option(c("--reportallpairs"),  default="FALSE",help="Should all pairs be reported or just significant pairs"),
+  make_option(c("--reportallpairs"), type = "logical", default=FALSE,help="Should all pairs be reported or just significant pairs"),
   make_option(c("--MHT"),  default="all",help="How should mutliple hypothsesis testing be done?  Correct for 'all' possible pairs of loci or only those 'found' with at least 1 PET")  
 )
 
@@ -400,7 +400,7 @@ if (5 %in% opt$stages)
   minPETS = as.numeric(as.character(opt["minPETS"]))
   chrominclude      = as.character(opt["chrominclude"])
   chromexclude      = as.character(opt["chromexclude"])
-  reportallpairs    = as.logical(opt["reportallpairs"])
+  reportallpairs    = opt["reportallpairs"]
   corrMethod = as.character(opt["corrMethod"])
   MHT    = as.character(opt["MHT"])
   extendreads = as.numeric(opt["extendreads"])
