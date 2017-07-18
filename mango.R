@@ -10,9 +10,18 @@ suppressPackageStartupMessages(library("mango"))
 suppressPackageStartupMessages(library("optparse"))
 suppressPackageStartupMessages(library("readr"))
 
-print ("Starting mango ChIA PET analysis tool")
+
+log <- function(text){
+	# current time:
+	time <- format(Sys.time(), "%Y.%m.%d - %X")
+	print(paste(time,": ", text, sep = ""))
+}
+
+
+log("Starting mango ChIA PET analysis tool")
 Sys.time()
 set.seed(1)
+
 
 ##################################### read commandline paramters #####################################
 
@@ -114,9 +123,9 @@ macs2version    = system(paste(macs2path,"--version 2>&1"),intern=TRUE)[1]
 bowtieversion   = system(paste(bowtiepath,"--version"),intern=TRUE)[1]
 
 # print out software versions
-print (paste("bedtools version:",bedtoolsversion))
-print (paste("macs2 version:",macs2version))
-print (paste("bowtie version:",bowtieversion))
+log(paste("bedtools version:",bedtoolsversion))
+log(paste("macs2 version:",macs2version))
+log(paste("bowtie version:",bowtieversion))
 
 # break if dependencies not found
 Paths = c(bedtoolspath,macs2path,bowtiepath)
@@ -128,10 +137,10 @@ for (p in Paths)
   if (p == "notfound")
   {
     pathsOK = F
-    print ("! Configuration Error !")
-    print (paste("     Path to ",progs[i]," not in PATH or arguments",sep=""))
-    print ("     Please add to PATH or arguments and try again")
-    print ("")
+    log("! Configuration Error !")
+    log(paste("     Path to ",progs[i]," not in PATH or arguments",sep=""))
+    log("     Please add to PATH or arguments and try again")
+    log("")
   }
 }
 if (pathsOK == F)
@@ -225,10 +234,10 @@ if (1 %in% opt$stages)
   if (singlelinker == "TRUE")
   {
     numberlinkers = 1
-    print ("singlelinker set to TRUE.  Only looking for one linker sequence")
+    log("singlelinker set to TRUE.  Only looking for one linker sequence")
   }
   
-  print ("finding linkers")
+  log("finding linkers")
   
   parsingresults = parseFastq( fastq1=fastq1,
               fastq2=fastq2,
@@ -258,7 +267,7 @@ if (2 %in% opt$stages)
   shortreads      = as.character(opt["shortreads"])
   threads         = as.character(opt["threads"])
   
-  print ("aligning reads")
+  log("aligning reads")
   # filenames
   fastq1 = paste(outname ,"_1.same.fastq",sep="")
   fastq2 = paste(outname ,"_2.same.fastq",sep="")
@@ -290,12 +299,12 @@ if (3 %in% opt$stages)
   npets4dist         = as.numeric(as.character(opt["npets4dist"]))
   
   # build bedpe
-  print ("building bedpe")
+  log("building bedpe")
   if (file.exists(bedpefile)){file.remove(bedpefile)}
   buildBedpe(sam1 =sam1, sam2 = sam2, bedpefile = bedpefile);
   
   # split by chromosome and position
-  print ("removing duplicate PETs")
+  log("removing duplicate PETs")
   distancesplit = 10000000
   rmdupresults = removeDups(bedpefile,outname,distancesplit)
   
@@ -317,7 +326,7 @@ if (3 %in% opt$stages)
   
   
 #   # split by chrom and sort bedpe
-#   print ("sorting bedpe")
+#   log("sorting bedpe")
 #   if (file.exists(bedpefilesort)){file.remove(bedpefilesort)}
 
 #   
@@ -325,7 +334,7 @@ if (3 %in% opt$stages)
 #   #external_sort(bedpefile, bedpefilesort)
 #   
 #   # filter duplicates
-#   print ("removing PCR duplicates")
+#   log("removing PCR duplicates")
 #   if (file.exists(bedpefilesortrmdup)){file.remove(bedpefilesortrmdup)}
 #   rmdupresults = removeDupBedpe(bedpefilesort,bedpefilesortrmdup,renamePets=TRUE);
 #   resultshash[["duplicate PETs"]] = rmdupresults[1]
@@ -364,28 +373,28 @@ if (4 %in% opt$stages)
   if (peakinput == "NULL")
   {
     if(!is.null(opt['hicValidpairs'])){
-      print("Coming from hiC Pro, he?")
-      print("lets test this beta feature")
+      log("Coming from hiC Pro, he?")
+      log("lets test this beta feature")
       # if we come from HICpro, build bedpe from valid pairs
       # remove old one:
       if (file.exists(bedpefilesortrmdup)){file.remove(bedpefilesortrmdup)}
       buildBedpeHiC(as.character(opt['hicValidpairs']),  bedpefilesortrmdup, bedtoolsgenome, 100)
-      print("Done building bedpe")
+      log("Done building bedpe")
     }
-    print ("building tagAlign file")
+    log("building tagAlign file")
     # reverse strands for peak calling
     if (file.exists(tagAlignfile)){file.remove(tagAlignfile)}
     buildTagAlign(bedpefilesortrmdup ,tagAlignfile )
     
     # call peaks 
-    print ("calling peaks")
+    log("calling peaks")
     callpeaks(macs2path=macs2path,tagAlignfile,outname,qvalue=MACS_qvalue,
              bedtoolspath=bedtoolspath,bedtoolsgenome=bedtoolsgenome,
              peakslop=peakslop,MACS_shiftsize,gsize=gsize)
   }
   
   # extend and merge peaks according to peakslop
-  print ("extending peaks")
+  log("extending peaks")
   peakcounts = extendpeaks(peaksfile,peaksfileslop,bedtoolspath=bedtoolspath,
              bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist)
   resultshash[["peaks"]] = peakcounts[1]
@@ -432,7 +441,7 @@ if (5 %in% opt$stages)
   fdrpairsfile       = paste(outname ,".interactions.fdr.mango",sep="")
   
   # counting reads per peak
-  print ("counting reads per peak")
+  log("counting reads per peak")
   if (file.exists(tagAlignfileExt) ==TRUE){file.remove(tagAlignfileExt)}
   if (file.exists(temppeakoverlap) ==TRUE){file.remove(temppeakoverlap)}
   DeterminePeakDepths(bedtools=bedtoolspath,bedtoolsgenome=bedtoolsgenome,extendreads=extendreads,tagAlignfile=tagAlignfile,
@@ -441,7 +450,7 @@ if (5 %in% opt$stages)
   if (file.exists(temppeakoverlap) ==TRUE){file.remove(temppeakoverlap)}
   
   # build a file of just distances and same / dif
-  print ("determining self-ligation distance")
+  log("determining self-ligation distance")
   makeDistanceFile(bedpefilesortrmdup,distancefile,
                    distcutrangemin,
                    distcutrangemax)
@@ -451,10 +460,10 @@ if (5 %in% opt$stages)
                                 range=c(distcutrangemin,distcutrangemax),
                                 biascut= biascut)
   # print distancecutoff
-  print (paste("self-ligation cutoff =",distancecutoff))
+  log(paste("self-ligation cutoff =",distancecutoff))
     
   # group PETs into interactions
-  print ("grouping PETs into interactions")
+  log("grouping PETs into interactions")
   chromosomes = groupPairs(bedpefilesortrmdup=bedpefilesortrmdup,
                            outname=outname,
                            peaksfile=peaksfileslop,
@@ -485,7 +494,7 @@ if (5 %in% opt$stages)
       warning("All chromosomes were removed. This might be undesireable.")
   }
 
-  print ("modeling PETs based on peak depth and distance")
+  log("modeling PETs based on peak depth and distance")
   #--------------- Gather IAB data ---------------#
   
   # gather all putative interactions
@@ -646,7 +655,7 @@ if (5 %in% opt$stages)
   
   #--------------- Correct for multiple hypothesis testing ---------------#
 
-  print ("correcting for multiple hypothesis testing")
+  log("correcting for multiple hypothesis testing")
   n=nrow(putpairs)
   if (MHT == "all")
   {
@@ -670,7 +679,7 @@ if (5 %in% opt$stages)
 
   #--------------- Write outputs ---------------#
   
-  print ("writing output files")
+  log("writing output files")
   # write results to output
   if (verboseoutput == TRUE)
   {
@@ -693,7 +702,7 @@ if (5 %in% opt$stages)
 
   #--------------- Make plots ---------------#
   
-  print ("plotting results")
+  log("plotting results")
   
   # plot models  
   pdf(modelspdf)
@@ -715,7 +724,7 @@ if (5 %in% opt$stages)
   #--------------- Delete temporary files ---------------#
   
   # clean up extra files
-  print ("deleting temporary files")
+  log("deleting temporary files")
   if (file.exists(distancefile)) file.remove(distancefile)
   for (chrom in originalchroms)
   {
@@ -734,7 +743,7 @@ if (5 %in% opt$stages)
 
 ##################################### Make Log file #####################################
 
-print ("writing to log file")
+log("writing to log file")
 
 stoptime = paste("Analysis end time:" , as.character(Sys.time()))
 write(stoptime,file=logfile,append=TRUE)
@@ -755,11 +764,11 @@ for (key in names(opt))
 }
 write("",file=logfile,append=TRUE)
 write("With the following results:",file=logfile,append=TRUE)
-print (resultshash)
+log(resultshash)
 for (key in keys(resultshash))
 {
   write(paste( key, ":",resultshash[[key]]),file=logfile,append=TRUE)
 }
 
-print("done")
+log("done")
 
