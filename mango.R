@@ -467,7 +467,7 @@ if (5 %in% opt$stages)
   if (chromexclude[1] !=  "NULL")
   {
     chromosomestpremove = unlist(strsplit(chromexclude,split=","))
-    chromosomes = chromosomes[-which(chromosomes %in% chromosomestpremove)] 
+    chromosomes = chromosomes[! chromosomes %in% chromosomestpremove] 
   }    
   
   print ("modeling PETs based on peak depth and distance")
