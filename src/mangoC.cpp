@@ -1241,6 +1241,109 @@ void buildTagAlign(std::string bedpefile, std::string TagAlignfile) {
     outfile.close();
 }
 
+
+
+// Define a function that builds a bedpe file rom 2 sam file
+// [[Rcpp::export]]
+void buildBedpeHiC(std::string validPairs ,std::string bedpefile, std::string bedtoolsgenome, int readlength = 100)
+{
+    
+    // half the RL
+    
+    
+    // read the chromosome file
+    // store genome as map
+    std:map< std::string, int> gm;
+    std::string line;
+    int intVar;
+     
+    ifstream genome (bedtoolsgenome.c_str());
+    while(getline(genome, line)){
+      // split by tab
+      std::vector<std::string> e = string_split(line,"\t");
+      // stupid string to int conversion
+      std::stringstream ss;
+      ss << e[1];
+      ss >> intVar;
+      gm[e[0]] = intVar;
+    }
+    // done loading the genome
+    
+    
+  
+  // arguments
+  ifstream file(validPairs.c_str());
+  ofstream bedpefilestream ( bedpefile.c_str() );
+  
+  // define variables
+  int linecount = 0;
+  int skippedLines = 0;
+  while (getline(file, line))
+  {
+    // read lines and increment counter
+    linecount++;
+    
+    // split lines
+    std::vector<std::string> e = string_split(line,"\t");
+
+    // get info for file 1
+    std::string name = e[0];
+    name = string_split(name,"_")[0];
+    name = string_split(name," ")[0];
+    name = string_split(name,"#")[0];
+    
+    int start1 = StringToInt(e[2]);
+    int start2 = StringToInt(e[5]);
+    
+    std::string strand1 = e[3];
+    std::string strand2 = e[6];
+    
+    std::string chrom1 = e[1];
+    std::string chrom2 = e[4];
+    
+    int end1 = start1 + readlength;
+    int end2 = start2 + readlength;
+    
+    // validate the new ends dont exceed the size of the chr
+    if(end1 > gm[chrom1] or end2 > gm[chrom2]){
+      // skip this line
+      //cout << "Skipping this line:" << std::endl;
+      //cout << end1 << ">?" << gm[chrom1] << " " << end2 << ">?" << gm[chrom2]  << std::endl;
+      //cout << line << std::endl;
+      skippedLines++;
+      continue;
+    }
+    
+    // skip double stars
+    if ((chrom1 == "*") & (chrom2 == "*"))
+    {
+      continue;
+    }
+    
+    std::vector<std::string> outputvector;
+    outputvector.push_back(chrom1);
+    outputvector.push_back(IntToString(start1));
+    outputvector.push_back(IntToString(end1));
+    outputvector.push_back(chrom2);
+    outputvector.push_back(IntToString(start2));
+    outputvector.push_back(IntToString(end2));
+    outputvector.push_back(name);
+    outputvector.push_back(".");
+    outputvector.push_back(strand1);
+    outputvector.push_back(strand2);
+    std::string outputstring = vector_join(outputvector,"\t");
+    bedpefilestream << outputstring;
+    bedpefilestream << "\n";
+  
+    
+   
+  }
+  cout << "Skipped " << skippedLines << " lines as they could not be transformed" << std::endl;
+}
+
+
+  
+
 // Define a function to do an external sort
 // [[Rcpp::export]]
 void external_sort( std::string inputfile, std::string outputfile ){
