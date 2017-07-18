@@ -14,7 +14,8 @@ callpeaks <- function(macs2path,tagAlignfile,peaksfile,qvalue=0.05,
     shiftsize = ""
   }
 
-  command = paste(macs2path," callpeak -t ",tagAlignfile, shiftsize ," -g ",gsize,  " -f BED -n ",peaksfile," -q ",qvalue,sep=" ")
+  command = paste(macs2path," callpeak -t ",tagAlignfile, shiftsize ," -g ",gsize,  " -f BED -n ",peaksfile,"--nomodel --extsize 200  -q ",qvalue,sep=" ")
+
   print (command)
   system(command)
   
