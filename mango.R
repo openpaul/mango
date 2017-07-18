@@ -62,6 +62,8 @@ option_list <- list(
   make_option(c("--peakinput"),  default="NULL",help="user supplied peaks file"),
   make_option(c("--blacklist"),  default="NULL",help="BED file of regions to remove from MACS peaks"),
   make_option(c("--gsize"),  default="hs",help="mappable genome size or effective genome size for MACS2"),
+  make_option(c("--hicValidpairs"), default = NULL, type = "character", help = "If you want to input hicpor valid interactions files you can do this here"),
+  make_option(c("--readlength"), default = 100, type = "integer", help = "specify the readlength for conversion from HicPro to bedpe"),
   
   #---------- STAGE 5 PARAMETERS ----------#
   
@@ -74,7 +76,7 @@ option_list <- list(
   make_option(c("--FDR"),  default="0.05",help="FDR cutoff for interactions"),
   make_option(c("--extendreads"),  default="120",help="how many bp to extend reads towards peak"),
   make_option(c("--minPETS"),  default="2",help="minimum number of PETs required for an interaction (applied after FDR filtering)"),
-  make_option(c("--reportallpairs"),  default="FALSE",help="Should all pairs be reported or just significant pairs"),
+  make_option(c("--reportallpairs"), type = "logical", default=FALSE,help="Should all pairs be reported or just significant pairs"),
   make_option(c("--MHT"),  default="all",help="How should mutliple hypothsesis testing be done?  Correct for 'all' possible pairs of loci or only those 'found' with at least 1 PET")  
 )
 
@@ -361,6 +363,15 @@ if (4 %in% opt$stages)
   
   if (peakinput == "NULL")
   {
+    if(!is.null(opt['hicValidpairs'])){
+      print("Coming from hiC Pro, he?")
+      print("lets test this beta feature")
+      # if we come from HICpro, build bedpe from valid pairs
+      # remove old one:
+      if (file.exists(bedpefilesortrmdup)){file.remove(bedpefilesortrmdup)}
+      buildBedpeHiC(as.character(opt['hicValidpairs']),  bedpefilesortrmdup, bedtoolsgenome, 100)
+      print("Done building bedpe")
+    }
     print ("building tagAlign file")
     # reverse strands for peak calling
     if (file.exists(tagAlignfile)){file.remove(tagAlignfile)}
@@ -400,7 +411,7 @@ if (5 %in% opt$stages)
   minPETS = as.numeric(as.character(opt["minPETS"]))
   chrominclude      = as.character(opt["chrominclude"])
   chromexclude      = as.character(opt["chromexclude"])
-  reportallpairs    = as.character(opt["reportallpairs"])
+  reportallpairs    = opt["reportallpairs"]
   corrMethod = as.character(opt["corrMethod"])
   MHT    = as.character(opt["MHT"])
   extendreads = as.numeric(opt["extendreads"])
@@ -470,7 +481,7 @@ if (5 %in% opt$stages)
     chromosomes = chromosomes[! chromosomes %in% chromosomestpremove] 
   }    
   
-  if( len(chromosomes) == 0 ){
+  if( length(chromosomes) == 0 ){
       warning("All chromosomes were removed. This might be undesireable.")
   }
 
