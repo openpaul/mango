@@ -481,6 +481,10 @@ if (5 %in% opt$stages)
     chromosomes = chromosomes[! chromosomes %in% chromosomestpremove] 
   }    
   
+  if( len(chromosomes) == 0 ){
+      warning("All chromosomes were removed. This might be undesireable.")
+  }
+
   print ("modeling PETs based on peak depth and distance")
   #--------------- Gather IAB data ---------------#
   
