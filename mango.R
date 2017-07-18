@@ -19,7 +19,7 @@ log <- function(text){
 
 
 log("Starting mango ChIA PET analysis tool")
-Sys.time()
+#Sys.time()
 set.seed(1)
 
 
@@ -745,7 +745,7 @@ if (5 %in% opt$stages)
 
 log("writing to log file")
 
-stoptime = paste("Analysis end time:" , as.character(Sys.time()))
+stoptime <- paste("Analysis end time:" , as.character(Sys.time()))
 write(stoptime,file=logfile,append=TRUE)
 write("",file=logfile,append=TRUE)
 
@@ -764,7 +764,7 @@ for (key in names(opt))
 }
 write("",file=logfile,append=TRUE)
 write("With the following results:",file=logfile,append=TRUE)
-log(resultshash)
+print(resultshash)
 for (key in keys(resultshash))
 {
   write(paste( key, ":",resultshash[[key]]),file=logfile,append=TRUE)
