@@ -466,7 +466,7 @@ if (5 %in% opt$stages)
   # calculate bias and cutoff
   distancecutoff = calcDistBias(distancefile,distancecutpdf=distancecutpdf,
                                 range=c(distcutrangemin,distcutrangemax),
-                                biascut= biascut)
+                                biascut= biascut, numofbins = opt['numofbins'], verbose = opt["verbose"])
   # print distancecutoff
   logmsg(paste("self-ligation cutoff =",distancecutoff))
     

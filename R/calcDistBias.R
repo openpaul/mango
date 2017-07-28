@@ -1,6 +1,6 @@
 
 # Define a function that determines distance cutoff
-calcDistBias <- function(distancefile,distancecutpdf,range,biascut)
+calcDistBias <- function(distancefile,distancecutpdf,range,biascut, numofbins = 50, verbose = FALSE)
 {
   # Define a function that calculates self-ligation bias
   selfligationbias <- function(Sobs,Total)
@@ -20,7 +20,7 @@ calcDistBias <- function(distancefile,distancecutpdf,range,biascut)
   dist = dist[which(dist$distance > mindist & dist$distance < maxdist),]
   
   # make bins
-  numofbins = 50
+  #numofbins = 50
   bins = seq(log10(mindist),log10(maxdist),length.out=numofbins)
   
   # assign to bins
