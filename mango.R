@@ -46,7 +46,8 @@ option_list <- list(
   make_option(c("--bedtoolspath"),  default="NULL",help="full path to bedtools"),
   make_option(c("--macs2path"),  default="NULL",help="full path to macs2path"),
   make_option(c("--bowtiepath"),  default="NULL",help="full path to bowtiepath"),
-  make_option(c("--verboseoutput"),  default="FALSE",help="if true output file will have more columns as well as a header row describing the columns"),
+  make_option(c("--verboseoutput"),  type = "logical" , default = FALSE ,help="if true output file will have more columns as well as a header row describing the columns"),
+  make_option(c("--verbose"),  type = "logical" , default = FALSE ,help="if true more debug messages are printed"),
   
   #---------- STAGE 1 PARAMETERS ----------#
   
@@ -401,7 +402,7 @@ if (4 %in% opt$stages)
   # extend and merge peaks according to peakslop
   logmsg("extending peaks")
   peakcounts = extendpeaks(peaksfile,peaksfileslop,bedtoolspath=bedtoolspath,
-             bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist)
+             bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist, verbose = verbose)
   resultshash[["peaks"]] = peakcounts[1]
   resultshash[["mergedpeaks"]] = peakcounts[2]
 }
@@ -414,22 +415,23 @@ if (5 %in% opt$stages)
   checkRequired(opt,c("outname","bedtoolsgenome"))
   
   # gather arguments
-  outname = as.character(opt["outname"])
-  distcutrangemin = as.numeric(as.character(opt["distcutrangemin"]))
-  distcutrangemax = as.numeric(as.character(opt["distcutrangemax"]))
-  bedtoolsgenome    = as.character(opt["bedtoolsgenome"])
-  biascut = as.numeric(as.character(opt["biascut"]))
+  outname            = as.character(opt["outname"])
+  distcutrangemin    = as.numeric(as.character(opt["distcutrangemin"]))
+  distcutrangemax    = as.numeric(as.character(opt["distcutrangemax"]))
+  bedtoolsgenome     = as.character(opt["bedtoolsgenome"])
+  biascut            = as.numeric(as.character(opt["biascut"]))
   maxinteractingdist = as.numeric(as.character(opt["maxinteractingdist"]))
-  numofbins = as.numeric(as.character(opt["numofbins"]))
-  FDR = as.numeric(as.character(opt["FDR"]))
-  minPETS = as.numeric(as.character(opt["minPETS"]))
-  chrominclude      = as.character(opt["chrominclude"])
-  chromexclude      = as.character(opt["chromexclude"])
-  reportallpairs    = opt["reportallpairs"]
-  corrMethod = as.character(opt["corrMethod"])
-  MHT    = as.character(opt["MHT"])
-  extendreads = as.numeric(opt["extendreads"])
-  verboseoutput = as.character(opt["verboseoutput"])
+  numofbins          = as.numeric(as.character(opt["numofbins"]))
+  FDR                = as.numeric(as.character(opt["FDR"]))
+  minPETS            = as.numeric(as.character(opt["minPETS"]))
+  chrominclude       = as.character(opt["chrominclude"])
+  chromexclude       = as.character(opt["chromexclude"])
+  reportallpairs     = opt["reportallpairs"]
+  corrMethod         = as.character(opt["corrMethod"])
+  MHT                = as.character(opt["MHT"])
+  extendreads        = as.numeric(opt["extendreads"])
+  verboseoutput      = opt["verboseoutput"]
+  verbose            = opt["verbose"]
 
   # filenames
   tagAlignfile       = paste(outname,".tagAlign",sep="")
@@ -475,7 +477,7 @@ if (5 %in% opt$stages)
                            bedtoolspath = bedtoolspath,
                            bedtoolsgenome = bedtoolsgenome,
                            extendreads=extendreads,peaksfileslopdepth=peaksfileslopdepth,
-                           verbose=FALSE)
+                           verbose=verbose)
   
   # filter out unwanted chromosomes
   originalchroms = chromosomes
