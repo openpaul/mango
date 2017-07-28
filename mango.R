@@ -1,7 +1,12 @@
+#
 # runs mango chia pet analysis pipeline
+#
+# call this directly for processing HiChIP or ChIA-PET data
+# see https://github.com/dphansti/mango for details
+#
 
 # Version info
-Mangoversion = "1.2.0"
+Mangoversion = "1.2.1"
 
 # Load Packages
 suppressPackageStartupMessages(library("Rcpp"))
