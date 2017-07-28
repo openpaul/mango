@@ -41,8 +41,8 @@ option_list <- list(
   make_option(c("--argsfile"),  default="NULL",help="optional argument file used to pass in command line paramters"),
   make_option(c("--bowtieref"),   default="NULL",help="genome reference file for bowtie"),
   make_option(c("--bedtoolsgenome"),  default="NULL",help="bedtools genome file"),
-  make_option(c("--chrominclude"),  default="NULL",help="comma separated list of chromosomes to use (e.g. chr1,chr2,chr3,...).  Only these chromosomes will be processed"),
-  make_option(c("--chromexclude"),  default="NULL",help="comma separated list of chromosomes to exclude (e.g. chrM,chrY). !!chrM should always be excluded due to its extremely short length!!"),
+  make_option(c("--chrominclude"),  default= NULL, type = "character", help="comma separated list of chromosomes to use (e.g. chr1,chr2,chr3,...).  Only these chromosomes will be processed"),
+  make_option(c("--chromexclude"),  default = NULL, type = "character", help="comma separated list of chromosomes to exclude (e.g. chrM,chrY). !!chrM should always be excluded due to its extremely short length!!"),
   make_option(c("--bedtoolspath"),  default="NULL",help="full path to bedtools"),
   make_option(c("--macs2path"),  default="NULL",help="full path to macs2path"),
   make_option(c("--bowtiepath"),  default="NULL",help="full path to bowtiepath"),
@@ -98,6 +98,7 @@ option_list <- list(
 # get command line options, if help option encountered print help and exit,
 # otherwise if options not found on command line then set defaults,
 opt <- parse_args(OptionParser(option_list=option_list))
+
 
 # check dependencies
 
@@ -402,7 +403,7 @@ if (4 %in% opt$stages)
   # extend and merge peaks according to peakslop
   logmsg("extending peaks")
   peakcounts = extendpeaks(peaksfile,peaksfileslop,bedtoolspath=bedtoolspath,
-             bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist, verbose = verbose)
+             bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist, verbose = opt["verbose"])
   resultshash[["peaks"]] = peakcounts[1]
   resultshash[["mergedpeaks"]] = peakcounts[2]
 }
@@ -424,14 +425,14 @@ if (5 %in% opt$stages)
   numofbins          = as.numeric(as.character(opt["numofbins"]))
   FDR                = as.numeric(as.character(opt["FDR"]))
   minPETS            = as.numeric(as.character(opt["minPETS"]))
-  chrominclude       = as.character(opt["chrominclude"])
-  chromexclude       = as.character(opt["chromexclude"])
+  chrominclude       = opt["chrominclude"]
+  chromexclude       = opt["chromexclude"]
   reportallpairs     = opt["reportallpairs"]
   corrMethod         = as.character(opt["corrMethod"])
   MHT                = as.character(opt["MHT"])
   extendreads        = as.numeric(opt["extendreads"])
   verboseoutput      = opt["verboseoutput"]
-  verbose            = opt["verbose"]
+  
 
   # filenames
   tagAlignfile       = paste(outname,".tagAlign",sep="")
@@ -452,7 +453,7 @@ if (5 %in% opt$stages)
   if (file.exists(tagAlignfileExt) ==TRUE){file.remove(tagAlignfileExt)}
   if (file.exists(temppeakoverlap) ==TRUE){file.remove(temppeakoverlap)}
   DeterminePeakDepths(bedtools=bedtoolspath,bedtoolsgenome=bedtoolsgenome,extendreads=extendreads,tagAlignfile=tagAlignfile,
-                  tagAlignfileExt=tagAlignfileExt,peaksfileslop=peaksfileslop,temppeakoverlap=temppeakoverlap)
+                  tagAlignfileExt=tagAlignfileExt,peaksfileslop=peaksfileslop,temppeakoverlap=temppeakoverlap, verbose = opt["verbose"])
   if (file.exists(tagAlignfileExt) ==TRUE){file.remove(tagAlignfileExt)}
   if (file.exists(temppeakoverlap) ==TRUE){file.remove(temppeakoverlap)}
   
@@ -477,7 +478,7 @@ if (5 %in% opt$stages)
                            bedtoolspath = bedtoolspath,
                            bedtoolsgenome = bedtoolsgenome,
                            extendreads=extendreads,peaksfileslopdepth=peaksfileslopdepth,
-                           verbose=verbose)
+                           verbose= opt["verbose"])
   
   # filter out unwanted chromosomes
   originalchroms = chromosomes
@@ -486,12 +487,12 @@ if (5 %in% opt$stages)
   bedtoolsgenomeinfo = read.table(bedtoolsgenome,header=FALSE,sep="\t")
   chromosomes = bedtoolsgenomeinfo[,1]
   chromosomes = chromosomes[grep("_",chromosomes,invert=TRUE)]
-  if(chrominclude[1] != "NULL")
+  if(!is.null(chrominclude[1]))
   {
     chromosomes = unlist(strsplit(chrominclude,split=","))
   }
   
-  if (chromexclude[1] !=  "NULL")
+  if (!is.null(chromexclude[1]))
   {
     chromosomestpremove = unlist(strsplit(chromexclude,split=","))
     chromosomes = chromosomes[! chromosomes %in% chromosomestpremove] 
