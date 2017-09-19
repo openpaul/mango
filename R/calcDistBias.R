@@ -13,20 +13,24 @@ calcDistBias <- function(distancefile,distancecutpdf,range,biascut, numofbins = 
   maxdist = range[2]
   
   # read in data
-  dist = read.table(distancefile,header=FALSE,sep="\t")
+  dist        = read.table(distancefile, header = FALSE, sep = "\t")
   names(dist) = c("distance","orientation")
   
   # filter for min distance
-  dist = dist[which(dist$distance > mindist & dist$distance < maxdist),]
+  dist        = dist[which(dist$distance > mindist & dist$distance < maxdist),]
   
   # make bins
   #numofbins = 50
-  bins = seq(log10(mindist),log10(maxdist),length.out=numofbins)
+  print(verbose)
+  if(verbose == TRUE){
+  	print(paste("calculating bias for", numofbins, "bins"))
+  }
+  bins = seq(log10(mindist),log10(maxdist),length.out = numofbins)
   
   # assign to bins
   dist$bin  = findInterval(log10(dist$distance), bins)
-  S = hist(dist$bin[which(dist$orientation == "S")],breaks=(0:numofbins),plot=FALSE)
-  D = hist(dist$bin[which(dist$orientation == "D")],breaks=(0:numofbins),plot=FALSE)
+  S = hist(dist$bin[which(dist$orientation == "S")],breaks=(0:numofbins),plot = FALSE)
+  D = hist(dist$bin[which(dist$orientation == "D")],breaks=(0:numofbins),plot = FALSE)
   
   
   # calculate the biases

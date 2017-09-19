@@ -17,9 +17,9 @@ suppressPackageStartupMessages(library("readr"))
 
 
 logmsg <- function(text){
-	# current time:
-	time <- format(Sys.time(), "%Y.%m.%d - %X")
-	print(paste(time,": ", text, sep = ""))
+    # current time:
+    time <- format(Sys.time(), "%Y.%m.%d - %X")
+    print(paste(time,": ", text, sep = ""))
 }
 
 
@@ -85,7 +85,7 @@ option_list <- list(
   make_option(c("--distcutrangemin"),  default="1000",help="range in which to look for the self-ligation distance"),
   make_option(c("--distcutrangemax"),  default="100000",help="range in which to look for the self-ligation distance"),
   make_option(c("--biascut"),  default="0.05",help="Self ligation bias cutoff"),
-  make_option(c("--numofbins"),  default="50",help="number of bins for probability calculations"),
+  make_option(c("--numofbins"),  default=50,type = "integer", help="number of bins for probability calculations"),
   make_option(c("--corrMethod"),  default="BH",help="multiple hypothesis tersting correction method"),
   make_option(c("--maxinteractingdist"),  default="1000000",help="maximum disance allowed for an interaction"),
   make_option(c("--FDR"),  default="0.05",help="FDR cutoff for interactions"),
@@ -403,7 +403,7 @@ if (4 %in% opt$stages)
   # extend and merge peaks according to peakslop
   logmsg("extending peaks")
   peakcounts = extendpeaks(peaksfile,peaksfileslop,bedtoolspath=bedtoolspath,
-             bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist, verbose = opt["verbose"])
+             bedtoolsgenome=bedtoolsgenome,peakslop=peakslop,blacklist=blacklist, verbose = opt["verbose"]$verbose)
   resultshash[["peaks"]] = peakcounts[1]
   resultshash[["mergedpeaks"]] = peakcounts[2]
 }
@@ -418,15 +418,19 @@ if (5 %in% opt$stages)
   # gather arguments
   outname            = as.character(opt["outname"])
   distcutrangemin    = as.numeric(as.character(opt["distcutrangemin"]))
+  if(distcutrangemin < 1){
+      warning("min distacne cut of can not be smaller than 1")
+      distcutrangemin <- 1
+  }
   distcutrangemax    = as.numeric(as.character(opt["distcutrangemax"]))
   bedtoolsgenome     = as.character(opt["bedtoolsgenome"])
   biascut            = as.numeric(as.character(opt["biascut"]))
   maxinteractingdist = as.numeric(as.character(opt["maxinteractingdist"]))
-  numofbins          = as.numeric(as.character(opt["numofbins"]))
+  numofbins          = opt["numofbins"]
   FDR                = as.numeric(as.character(opt["FDR"]))
   minPETS            = as.numeric(as.character(opt["minPETS"]))
-  chrominclude       = opt["chrominclude"]
-  chromexclude       = opt["chromexclude"]
+  chrominclude       = opt["chrominclude"]$chrominclude
+  chromexclude       = opt["chromexclude"]$chromexclude
   reportallpairs     = opt["reportallpairs"]
   corrMethod         = as.character(opt["corrMethod"])
   MHT                = as.character(opt["MHT"])
@@ -450,12 +454,12 @@ if (5 %in% opt$stages)
   
   # counting reads per peak
   logmsg("counting reads per peak")
-  if (file.exists(tagAlignfileExt) ==TRUE){file.remove(tagAlignfileExt)}
-  if (file.exists(temppeakoverlap) ==TRUE){file.remove(temppeakoverlap)}
+  if (file.exists(tagAlignfileExt) == TRUE){file.remove(tagAlignfileExt)}
+  if (file.exists(temppeakoverlap) == TRUE){file.remove(temppeakoverlap)}
   DeterminePeakDepths(bedtools=bedtoolspath,bedtoolsgenome=bedtoolsgenome,extendreads=extendreads,tagAlignfile=tagAlignfile,
-                  tagAlignfileExt=tagAlignfileExt,peaksfileslop=peaksfileslop,temppeakoverlap=temppeakoverlap, verbose = opt["verbose"])
-  if (file.exists(tagAlignfileExt) ==TRUE){file.remove(tagAlignfileExt)}
-  if (file.exists(temppeakoverlap) ==TRUE){file.remove(temppeakoverlap)}
+                  tagAlignfileExt=tagAlignfileExt,peaksfileslop=peaksfileslop,temppeakoverlap=temppeakoverlap, verbose = opt["verbose"]$verbose)
+  if (file.exists(tagAlignfileExt) == TRUE){file.remove(tagAlignfileExt)}
+  if (file.exists(temppeakoverlap) == TRUE){file.remove(temppeakoverlap)}
   
   # build a file of just distances and same / dif
   logmsg("determining self-ligation distance")
@@ -464,30 +468,34 @@ if (5 %in% opt$stages)
                    distcutrangemax)
   
   # calculate bias and cutoff
-  distancecutoff = calcDistBias(distancefile,distancecutpdf=distancecutpdf,
-                                range=c(distcutrangemin,distcutrangemax),
-                                biascut= biascut, numofbins = opt['numofbins'], verbose = opt["verbose"])
+  distancecutoff = calcDistBias(distancefile,
+                                distancecutpdf = distancecutpdf,
+                                range     = c(distcutrangemin,distcutrangemax),
+                                biascut   = biascut, 
+                                numofbins = opt['numofbins']$numofbins, 
+                                verbose   = opt["verbose"]$verbose)
   # print distancecutoff
-  logmsg(paste("self-ligation cutoff =",distancecutoff))
+  logmsg(paste("self-ligation cutoff =", distancecutoff))
     
   # group PETs into interactions
   logmsg("grouping PETs into interactions")
-  chromosomes = groupPairs(bedpefilesortrmdup=bedpefilesortrmdup,
-                           outname=outname,
-                           peaksfile=peaksfileslop,
-                           bedtoolspath = bedtoolspath,
-                           bedtoolsgenome = bedtoolsgenome,
-                           extendreads=extendreads,peaksfileslopdepth=peaksfileslopdepth,
-                           verbose= opt["verbose"])
+  chromosomes = groupPairs(bedpefilesortrmdup = bedpefilesortrmdup,
+                           outname            = outname,
+                           peaksfile          = peaksfileslop,
+                           bedtoolspath       = bedtoolspath,
+                           bedtoolsgenome     = bedtoolsgenome,
+                           extendreads        = extendreads,
+                           peaksfileslopdepth = peaksfileslopdepth,
+                           verbose            = opt["verbose"]$verbose)
   
   # filter out unwanted chromosomes
   originalchroms = chromosomes
   
   # get chromosomes from bedtools
-  bedtoolsgenomeinfo = read.table(bedtoolsgenome,header=FALSE,sep="\t")
+  bedtoolsgenomeinfo = read.table(bedtoolsgenome,header = FALSE,sep="\t")
   chromosomes = bedtoolsgenomeinfo[,1]
-  chromosomes = chromosomes[grep("_",chromosomes,invert=TRUE)]
-  if(!is.null(chrominclude[1]))
+  chromosomes = chromosomes[grep("_",chromosomes,invert = TRUE)]
+  if(!is.null(chrominclude))
   {
     chromosomes = unlist(strsplit(chrominclude,split=","))
   }
@@ -523,23 +531,28 @@ if (5 %in% opt$stages)
     #--------------- Distance Normalization ---------------#
     
     # determine borders to distance bins
-    distanceborders = binmaker(putpairs$distances,binmethod="equalocc",numberbins=numofbins)
+    distanceborders = binmaker(putpairs$distances,binmethod="equalocc",numberbins = numofbins)
     
     # model IAB vs distance
-    distance_IAB_model = model_chia(x=putpairs$distances,y=putpairs[,12],borders=distanceborders,yvals=TRUE)
-    distance_IAB_model_file   = paste(outname ,".distance_IAB_model.",reps, ".text",sep="")
-    write.table(distance_IAB_model,file=distance_IAB_model_file,quote = FALSE, sep = "\t",row.names = FALSE,col.names = TRUE)
-    distance_IAB_spline =   smooth.spline(log10(distance_IAB_model[,1]),distance_IAB_model[,3],spar=.75)
+    distance_IAB_model        = model_chia( x = putpairs$distances,
+                                            y = putpairs[,12], 
+                                            borders = distanceborders, 
+                                            yvals = TRUE)
+    distance_IAB_model_file   = paste(outname ,
+                                      ".distance_IAB_model.", 
+                                      reps, ".text", sep = "")
+    write.table(distance_IAB_model,file = distance_IAB_model_file,quote = FALSE, sep = "\t",row.names = FALSE,col.names = TRUE)
+    distance_IAB_spline       =   smooth.spline(log10(distance_IAB_model[,1]),distance_IAB_model[,3],spar=.75)
     
     #--------------- Depth Normalization ---------------#
     
     # determine borders to depth bins
-    depthborders = binmaker(putpairs$depths,binmethod="equalocc",numberbins=numofbins)
+    depthborders = binmaker(putpairs$depths,binmethod="equalocc",numberbins = numofbins)
     
     # model IAB vs depth
-    depth_IAB_model = model_chia(x=putpairs$depths,y=putpairs[,12],borders=depthborders,yvals=TRUE)
+    depth_IAB_model = model_chia(x = putpairs$depths,y = putpairs[,12],borders = depthborders,yvals = TRUE)
     depth_IAB_model_file   = paste(outname ,".depth_IAB_model.",reps, ".text",sep="")
-    write.table(depth_IAB_model,file=depth_IAB_model_file,quote = FALSE, sep = "\t",row.names = FALSE,col.names = TRUE)
+    write.table(depth_IAB_model,file = depth_IAB_model_file,quote = FALSE, sep = "\t",row.names = FALSE,col.names = TRUE)
     depth_IAB_spline =   smooth.spline(log10(depth_IAB_model[,1]),depth_IAB_model[,3],spar=.75)
     
     # model Combos vs distance

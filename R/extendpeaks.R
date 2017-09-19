@@ -2,7 +2,7 @@
 # Define a function that extends peaks and merges ones that overlap
 extendpeaks <- function(peaksfile=peaksfile,peaksfileslop=peaksfileslop,
                         bedtoolspath=bedtoolspath,bedtoolsgenome=bedtoolsgenome,
-                        peakslop=peakslop,blacklist,verbose=FALSE)
+                        peakslop=peakslop,blacklist,verbose = FALSE)
 {
   
   # make peakfile with slop
